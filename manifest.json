@@ -1,0 +1,24 @@
+// Configuration and Security Context
+// Restricted permission
+// Using "storage" allows settings persistence without exposing user data to external networks
+
+{
+  "manifest_version": 3,
+  "name": "Epoch Time Customizer",
+  "version": "1.0.0",
+  "description": "Securely converts raw Unix epoch timestamps on screen to your selected timezone.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }
+}
