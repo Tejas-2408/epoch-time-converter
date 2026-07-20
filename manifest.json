@@ -1,6 +1,4 @@
-// Configuration and Security Context
-// Restricted permission
-// Using "storage" allows settings persistence without exposing user data to external networks
+
 
 {
   "manifest_version": 3,
