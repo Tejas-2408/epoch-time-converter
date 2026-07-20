@@ -1,0 +1,21 @@
+{
+  "test_suite_metadata": {
+    "target_app": "Epoch Time Customizer",
+    "notes": "Open this file in a Chrome tab to verify conversions next to matching numbers."
+  },
+  "positive_test_cases": {
+    "description": "All values below start with 1 or 2 and match valid epoch windows. They should display the [🕒 Local Time] flag next to them.",
+    "seconds_current_era": 1779313371,
+    "seconds_past_era": 1609459200,
+    "seconds_future_era": 2147483647,
+    "milliseconds_current_era": 1779313371000,
+    "embedded_in_text": "The deployment log finished execution cleanly at timestamp 1779313371 exactly."
+  },
+  "negative_test_cases": {
+    "description": "The values below should remain completely untouched to prevent breaking regular data values, IDs, or phone numbers.",
+    "too_short_id": 999999999,
+    "too_long_id": 123456789012345,
+    "phone_number_out_of_range": 5551234567,
+    "already_converted_flag_protection": "1779313371 [🕒 7/20/2026, 9:42:51 PM]"
+  }
+}

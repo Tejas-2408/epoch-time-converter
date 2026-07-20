@@ -32,12 +32,33 @@ function convertText(text) {
     if (match.length === 10) timestamp *= 1000;
 
     try {
-      const options = extensionSettings.timezone === 'LOCAL' 
-        ? {} 
-        : { timeZone: extensionSettings.timezone };
+      // Configure strict 24-hour token options
+      const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23', // Forces 24-hour cycle (00-23)
+        timeZoneName: 'short' // Captures short code like IST, GMT, EST
+      };
       
-      const humanTime = new Date(timestamp).toLocaleString(undefined, options);
-      return `${match} [🕒 ${humanTime}]`;
+      if (extensionSettings.timezone !== 'LOCAL') {
+        options.timeZone = extensionSettings.timezone;
+      }
+      
+      // Use 'en-US' as a deterministic base locale to extract layout parts cleanly
+      const formatter = new Intl.DateTimeFormat('en-US', options);
+      const parts = formatter.formatToParts(new Date(timestamp));
+      
+      // Map the parts array into an easily queryable object map
+      const p = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      
+      // Construct exactly: yyyy-mm-dd HH:MM:ss TZ
+      const humanTime = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second} ${p.timeZoneName}`;
+      
+      return `${match} [${humanTime}]`;
     } catch (e) {
       return match; // Keep unchanged if date calculations fail
     }
