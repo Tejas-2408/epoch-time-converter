@@ -8,6 +8,46 @@ let extensionSettings = { enabled: true, timezone: 'LOCAL' };
 // The lookahead/lookbehind ensures we don't convert timestamps already appended with [🕒 ...]
 const EPOCH_REGEX = /\b(1\d{9}|2\d{9}|1\d{12})\b(?!\s*\[🕒)/g;
 
+// Any element matching this selector is treated as a "live editing surface" —
+// text/code editors and input-like widgets — and is never touched by the
+// converter. Rewriting a text node's value while a user's cursor/selection is
+// anchored inside it forces the browser to reset that cursor to the start of
+// the node, which is what caused typing, caret position and copy/paste to
+// break in unrelated editor panes elsewhere on the page.
+const EDITABLE_SURFACE_SELECTOR = [
+  '[contenteditable]',
+  'input',
+  'textarea',
+  '[role="textbox"]',
+  '[role="combobox"]',
+  '[role="searchbox"]',
+  '.CodeMirror',
+  '.cm-editor',
+  '.monaco-editor',
+  '.ace_editor',
+  '.ProseMirror',
+  '[data-slate-editor]'
+].join(',');
+
+/**
+ * True if `el` is, or sits inside, a live editing surface (a text box, rich
+ * text editor or code editor) that the converter must never rewrite.
+ */
+function isEditableSurface(el) {
+  if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+
+  const host = el.closest(EDITABLE_SURFACE_SELECTOR);
+  if (!host) return false;
+
+  // A `contenteditable="false"` element explicitly opts back out, even when
+  // nested inside a larger editable ancestor.
+  if (host.hasAttribute('contenteditable')) {
+    return host.getAttribute('contenteditable') !== 'false';
+  }
+
+  return true;
+}
+
 // Initialize configurations from chrome storage
 chrome.storage.local.get({ enabled: true, timezone: 'LOCAL' }, (items) => {
   extensionSettings = items;
@@ -67,16 +107,31 @@ function convertText(text) {
 
 function runConversion(rootNode) {
   if (!rootNode) return;
-  
+
+  // Never walk into a live editing surface at all — skip the whole subtree.
+  if (rootNode.nodeType === Node.ELEMENT_NODE && isEditableSurface(rootNode)) {
+    return;
+  }
+
   const walker = document.createTreeWalker(
     rootNode,
     NodeFilter.SHOW_TEXT,
     {
       acceptNode: (node) => {
-        const parentTag = node.parentNode ? node.parentNode.tagName : '';
+        const parentEl = node.parentElement;
+        if (!parentEl) return NodeFilter.FILTER_REJECT;
+
+        const parentTag = parentEl.tagName;
         if (['SCRIPT', 'STYLE', 'CODE', 'INPUT', 'TEXTAREA'].includes(parentTag)) {
           return NodeFilter.FILTER_REJECT;
         }
+
+        // Skip text that lives inside any editor / input-like widget so we
+        // never mutate a node the user might currently be typing into.
+        if (isEditableSurface(parentEl)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+
         return NodeFilter.FILTER_ACCEPT;
       }
     }
@@ -100,14 +155,26 @@ const observer = new MutationObserver((mutations) => {
   observer.disconnect();
 
   for (const mutation of mutations) {
+    // If this mutation happened inside a live editing surface (e.g. a code
+    // editor pane re-rendering as the user types), ignore it entirely —
+    // don't even look at its added nodes. This is what previously caused
+    // typing/cursor position/copy-paste to break in other editor panes.
+    if (mutation.target && isEditableSurface(mutation.target)) {
+      continue;
+    }
+
     for (const node of mutation.addedNodes) {
       if (node.nodeType === Node.ELEMENT_NODE) {
         runConversion(node);
       } else if (node.nodeType === Node.TEXT_NODE) {
-        const pTag = node.parentNode ? node.parentNode.tagName : '';
-        if (!['SCRIPT', 'STYLE', 'CODE'].includes(pTag)) {
-          node.nodeValue = convertText(node.nodeValue);
-        }
+        const parentEl = node.parentElement;
+        if (!parentEl) continue;
+
+        const pTag = parentEl.tagName;
+        if (['SCRIPT', 'STYLE', 'CODE'].includes(pTag)) continue;
+        if (isEditableSurface(parentEl)) continue;
+
+        node.nodeValue = convertText(node.nodeValue);
       }
     }
   }

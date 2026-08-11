@@ -1,24 +1,205 @@
-<!-- Allowing users to toggle the extension and switch timezones-->
+<!-- Popup: toggle the page converter, pick a timezone, and convert times by hand -->
 
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <style>
-    body { width: 220px; font-family: system-ui, sans-serif; padding: 10px; margin: 0; }
-    .row { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+    :root {
+      color-scheme: light;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --border: #dbe2ea;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --bg-soft: #f5f7fa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 300px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      padding: 14px;
+      margin: 0;
+      color: var(--text);
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 img { width: 20px; height: 20px; }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
     label { font-size: 13px; font-weight: 500; }
-    select { padding: 4px; width: 100%; border-radius: 4px; border: 1px solid #ccc; }
+
+    select, input[type="text"], input[type="date"], input[type="time"] {
+      padding: 6px 7px;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .field { margin-bottom: 10px; }
+    .field label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background-color: #cbd5e1;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 16px; width: 16px;
+      left: 2px; bottom: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.15s;
+    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider::before { transform: translateX(16px); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--bg-soft);
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 6px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .row-2 { display: flex; gap: 8px; }
+    .row-2 .field { flex: 1; margin-bottom: 0; }
+
+    button.convert-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button.convert-btn:hover { background: var(--primary-dark); }
+
+    .result {
+      margin-top: 10px;
+      padding: 9px 10px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12.5px;
+      min-height: 14px;
+      word-break: break-word;
+      display: none;
+    }
+    .result.visible { display: block; }
+    .result .main-value {
+      font-weight: 600;
+      font-size: 13.5px;
+      color: var(--text);
+    }
+    .result .sub-value {
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .result.error { color: #b91c1c; }
+
+    .copy-btn {
+      margin-top: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 5px;
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: inherit;
+    }
+    .copy-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .copy-btn.copied { border-color: #16a34a; color: #16a34a; }
   </style>
 </head>
 <body>
-  <h3>Epoch Customizer</h3>
+  <h3><img src="icons/icon48.png" alt="">Epoch Time Customizer</h3>
+
   <div class="row">
-    <label for="status">Enable Converter</label>
-    <input type="checkbox" id="status" checked>
+    <label for="status">Enable on-page converter</label>
+    <label class="switch">
+      <input type="checkbox" id="status" checked>
+      <span class="slider"></span>
+    </label>
   </div>
-  <div class="row" style="flex-direction: column; align-items: flex-start;">
-    <label for="timezone" style="margin-bottom: 5px;">Target Timezone</label>
+
+  <div class="field">
+    <label for="timezone">Target timezone</label>
     <select id="timezone">
       <option value="LOCAL">Local Time (Browser Default)</option>
       <option value="UTC">UTC / GMT</option>
@@ -27,6 +208,40 @@
       <option value="Asia/Kolkata">India (IST)</option>
     </select>
   </div>
+
+  <hr>
+
+  <div class="tabs">
+    <button type="button" class="tab-btn active" data-tab="epoch-to-human">Epoch → Human</button>
+    <button type="button" class="tab-btn" data-tab="human-to-epoch">Human → Epoch</button>
+  </div>
+
+  <!-- Paste an epoch timestamp, convert to a readable date/time -->
+  <div class="panel active" id="epoch-to-human">
+    <div class="field">
+      <label for="epoch-input">Epoch timestamp (seconds or milliseconds)</label>
+      <input type="text" id="epoch-input" placeholder="e.g. 1779313371">
+    </div>
+    <button type="button" class="convert-btn" id="epoch-to-human-btn">Convert to human time</button>
+    <div class="result" id="epoch-to-human-result"></div>
+  </div>
+
+  <!-- Enter a date + time, convert to epoch -->
+  <div class="panel" id="human-to-epoch">
+    <div class="row-2">
+      <div class="field">
+        <label for="date-input">Date (yyyy-mm-dd)</label>
+        <input type="date" id="date-input">
+      </div>
+      <div class="field">
+        <label for="time-input">Time (hh:mm:ss)</label>
+        <input type="time" id="time-input" step="1">
+      </div>
+    </div>
+    <button type="button" class="convert-btn" id="human-to-epoch-btn">Convert to epoch</button>
+    <div class="result" id="human-to-epoch-result"></div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
