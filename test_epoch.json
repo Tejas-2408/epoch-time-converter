@@ -16,6 +16,15 @@
     "too_short_id": 999999999,
     "too_long_id": 123456789012345,
     "phone_number_out_of_range": 5551234567,
-    "already_converted_flag_protection": "1779313371 [🕒 7/20/2026, 9:42:51 PM]"
+    "already_converted_flag_protection": "1779313371 [🕒 7/20/2026, 9:42:51 PM]",
+    "id_inside_url": "https://example.com/orders/1779313371",
+    "id_inside_query": "https://example.com/item?id=1779313371&ref=home",
+    "prefixed_id": "ORD-1779313371",
+    "file_name": "1779313371.jpg",
+    "other_converter_long_date": "1779313371 (26 July 2026)",
+    "other_converter_us_date": "1779313371 - Jul 26, 2026",
+    "other_converter_iso": "1779313371 → 2026-07-26T10:00:00Z",
+    "other_converter_relative": "1779313371 (3 hours ago)",
+    "date_before_epoch": "26 July 2026 1779313371"
   }
 }
