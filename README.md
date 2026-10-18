@@ -1,5 +1,7 @@
 # Epoch Time Customizer
 
+**Version:** 1.1.2 · see [Changelog](#changelog)
+
 A Chrome extension (Manifest V3) that finds Unix epoch timestamps on any web page and shows the matching human-readable time next to them, in the timezone you pick. The popup also has two manual converters: epoch → human and human → epoch.
 
 ```
@@ -210,3 +212,16 @@ sequenceDiagram
 | --- | --- |
 | `storage` | Saves the enabled flag and timezone. |
 | `content_scripts` on `<all_urls>` | Needed to find timestamps on any page. Text is only read and rewritten locally; nothing is sent anywhere. |
+
+---
+
+## Changelog
+
+### 1.1.2 — Bug fix
+- **Standalone epochs only:** numbers that are part of a link, URL path, query parameter, ID (`ORD-…`, `user_…`, `#…`), file name or decimal are no longer converted. Previously, a word-boundary match picked up IDs inside links and caused confusing conversions.
+- **Link IDs skipped:** an epoch shown as the text of an `<a>` whose `href` contains the same number is treated as an identifier.
+- **No double conversion:** an epoch that already has a human-readable date or time next to it, in any format, is left as is. That includes dates from other converter extensions such as `1779313371 (26 July 2026)`, dates in neighbouring elements, and dates in tooltip attributes.
+- Added new negative cases to [`test_epoch.json`](test_epoch.json).
+
+### 1.1.1
+- Previous release.

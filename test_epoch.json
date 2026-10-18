@@ -1,6 +1,7 @@
 {
   "test_suite_metadata": {
     "target_app": "Epoch Time Customizer",
+    "target_version": "1.1.2",
     "notes": "Open this file in a Chrome tab to verify conversions next to matching numbers."
   },
   "positive_test_cases": {

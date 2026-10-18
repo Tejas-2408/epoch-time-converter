@@ -56,6 +56,12 @@ Pick Local time, UTC/GMT, or a specific zone (New York, London, India and
 more) — both the on-page conversion and the popup converter use it.
 
 BUILT FOR SAFETY & PERFORMANCE
+  • Only converts standalone timestamps — numbers that are part of a link,
+    URL, ID, file name or decimal (e.g. /orders/1779313371, ?id=…,
+    ORD-1779313371, 1779313371.jpg) are left untouched.
+  • Never converts a timestamp twice — if a human-readable date is already
+    shown next to it in any format (from this extension, another converter
+    or the page itself, e.g. "1779313371 (26 July 2026)"), it is skipped.
   • Only reads and rewrites plain text nodes — never touches scripts,
     styles, or code blocks.
   • Skips text editors, code editors and input fields entirely, so it never
@@ -68,6 +74,21 @@ BUILT FOR SAFETY & PERFORMANCE
 
 Perfect for developers, QA engineers, support teams and anyone who reads
 logs, API payloads or database rows full of Unix timestamps every day.
+```
+
+## What's new (release notes)
+
+### Version 1.1.2 — Bug fix
+```
+• Only standalone epoch timestamps are converted now. Numbers that are part
+  of a link, URL, query parameter, ID, file name or decimal are no longer
+  converted by mistake.
+• Link IDs are skipped: if a link's address contains the same number as its
+  text, that number is treated as an ID, not a time.
+• No double conversion: timestamps that already have a human-readable date
+  next to them (in any format, such as "26 July 2026", "Jul 26, 2026",
+  "2026-07-26", "21:42" or "3 hours ago", including dates added by other
+  converter extensions) are left as they are.
 ```
 
 ## Category
